@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:padding="@dimen/_15sdp"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".SearchLocationActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <View
+            android:id="@+id/Vieww"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/_2sdp"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:background="@color/gray"
+            app:layout_constraintBottom_toBottomOf="@id/rlAddress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/rlAddress" />
+
+        <RelativeLayout
+            android:id="@+id/rlAddress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/_10sdp"
+            android:background="@drawable/dr_edittext_border"
+            android:paddingVertical="@dimen/_10sdp"
+            android:paddingStart="@dimen/_8sdp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <androidx.appcompat.widget.AppCompatAutoCompleteTextView
+                android:id="@+id/edtPickUpLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toStartOf="@id/imgClear"
+                android:background="@color/white"
+                android:ellipsize="end"
+                android:textColor="@color/primary_black"
+                android:hint="Enter Pickup Location"
+                android:maxLines="2"
+                android:popupTheme="@color/transparent"
+                android:selectAllOnFocus="true"
+                android:text=""
+                android:layout_centerVertical="true"
+                android:textSize="@dimen/_12ssp"
+                android:textColorHint="@color/gray" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imgClear"
+                android:layout_width="@dimen/_40sdp"
+                android:layout_height="@dimen/_40sdp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_clear"
+                android:padding="@dimen/_4sdp"/>
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</androidx.appcompat.widget.LinearLayoutCompat>

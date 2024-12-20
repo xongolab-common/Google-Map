@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".StartEndLocationActivity">
+
+
+    <RelativeLayout
+        android:id="@+id/rlLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/_15sdp"
+        android:background="@drawable/dr_edittext_border">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/_16sdp">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imgOrange"
+                android:layout_width="@dimen/_10sdp"
+                android:layout_height="@dimen/_10sdp"
+                android:layout_alignTop="@+id/tvPickUpLocation"
+                android:layout_alignBottom="@id/tvPickUpLocation"
+                android:layout_alignParentStart="true"
+                android:src="@drawable/ic_orange_circle" />
+
+            <View
+                android:id="@+id/viewww"
+                android:layout_width="@dimen/_2sdp"
+                android:layout_height="match_parent"
+                android:layout_above="@id/imgRact"
+                android:layout_below="@id/imgOrange"
+                android:layout_marginStart="@dimen/_4sdp"
+                android:background="@color/gray" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvPickUpLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/_10sdp"
+                android:layout_toEndOf="@id/imgOrange"
+                android:background="@null"
+                android:hint="Enter Pickup Location"
+                android:singleLine="true"
+                android:textColorHint="@color/primary_black" />
+
+            <View
+                android:id="@+id/view"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_1sdp"
+                android:layout_below="@id/tvPickUpLocation"
+                android:layout_marginStart="@dimen/_10sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_toEndOf="@id/imgOrange"
+                android:background="@color/gray" />
+
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvDropOffLocation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/view"
+                android:layout_marginStart="@dimen/_10sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_toEndOf="@id/imgRact"
+                android:background="@null"
+                android:hint="Enter Dropff Location"
+                android:singleLine="true"
+                android:textColorHint="@color/primary_black" />
+
+            <View
+                android:id="@+id/viewDropOff"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/_1sdp"
+                android:layout_below="@id/tvDropOffLocation"
+                android:layout_marginStart="@dimen/_10sdp"
+                android:layout_marginTop="@dimen/_10sdp"
+                android:layout_toEndOf="@id/imgRact"
+                android:background="@color/gray" />
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imgRact"
+                android:layout_width="@dimen/_10sdp"
+                android:layout_height="@dimen/_10sdp"
+                android:layout_alignTop="@id/tvDropOffLocation"
+                android:layout_alignBottom="@id/tvDropOffLocation"
+                android:src="@drawable/ic_rectangle_black" />
+
+        </RelativeLayout>
+
+    </RelativeLayout>
+
+</RelativeLayout>
