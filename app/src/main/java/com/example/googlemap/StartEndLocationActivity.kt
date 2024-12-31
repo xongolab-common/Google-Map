@@ -100,7 +100,6 @@ class StartEndLocationActivity : AppCompatActivity() {
         }
     }
 
-
     private  fun isLocationPermissionGranted(): Boolean {
         return ContextCompat.checkSelfPermission(
             this,
@@ -136,7 +135,6 @@ class StartEndLocationActivity : AppCompatActivity() {
             }
         }
     }
-
 
     private fun requestLocationPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(
