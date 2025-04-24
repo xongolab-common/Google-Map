@@ -1,14 +1,13 @@
 package com.example.googlemap
 
 import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.drawable.BitmapDrawable
+import android.graphics.Color
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
@@ -16,16 +15,10 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
-import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
 import com.example.googlemap.databinding.ActivityMainBinding
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -41,12 +34,14 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.clustering.ClusterManager
+
 import java.util.Locale
 
 
@@ -57,6 +52,19 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private var currentLocationMarker: Marker? = null
     private lateinit var locationCallback: LocationCallback
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private val LOCATION_PERMISSION_REQUEST_CODE = 123
+
+    private var pickupLatitude: String = ""
+    private var pickupLongitude: String = ""
+
+    private var dropOffLatitude: String = ""
+    private var dropOffLongitude: String = ""
+
+    private var pickupAddress: String = ""
+    private var dropOffAddress: String = ""
+
+    private lateinit var clusterManager: ClusterManager<MyClusterItem>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -86,8 +94,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         }
 
         binding.icCurrentLocation.setOnClickListener {
-            // Get current location
-
             if (isLocationPermissionGranted()) {
                 fetchCurrentLocation()
             } else {
@@ -97,6 +103,25 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         binding.icDirection.setOnClickListener {
             startActivity(Intent(this, StartEndLocationActivity::class.java))
+        }
+
+        // StartEndLocationActivity
+
+        if (!isLocationPermissionGranted()){
+            requestLocationPermission()  // Location permission is not granted
+        } else {
+            getCurrentLocation()
+        }
+
+        binding.tvPickUpLocation.setOnClickListener {
+            val destIntent = Intent(this, SearchLocationActivity::class.java)
+            destIntent.putExtra("address", pickupAddress)
+            pickupLocationActivityResultLauncher.launch(destIntent)
+        }
+
+        binding.tvDropOffLocation.setOnClickListener {
+            val destIntent = Intent(this, SearchLocationActivity::class.java)
+            dropOffLocationActivityResultLauncher.launch(destIntent)
         }
 
     }
@@ -132,17 +157,48 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
 
     fun isLocationPermissionGranted(): Boolean {
-        return ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
+        return ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         //enableMyLocation()
+        setupClusterManager()
         startLocationUpdates()
     }
+
+    private fun setupClusterManager() {
+        clusterManager = ClusterManager(this, mMap)
+        mMap.setOnCameraIdleListener(clusterManager)
+        mMap.setOnMarkerClickListener(clusterManager)
+
+        // Add demo cluster items
+        addClusterItems()
+    }
+
+    private fun addClusterItems() {
+        // Example data — you can use your own pickup/drop data or anything else
+        val locations = listOf(
+            LatLng(28.7041, 77.1025), // Delhi
+            LatLng(19.0760, 72.8777), // Mumbai
+            LatLng(13.0827, 80.2707), // Chennai
+            LatLng(12.9716, 77.5946), // Bangalore
+            LatLng(22.5726, 88.3639)  // Kolkata
+        )
+
+        for ((index, latLng) in locations.withIndex()) {
+            val offsetItem = MyClusterItem(
+                latLng.latitude,
+                latLng.longitude,
+                "Location $index",
+                "This is location $index"
+            )
+            clusterManager.addItem(offsetItem)
+        }
+
+        clusterManager.cluster()
+    }
+
 
     private fun requestLocationPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(
@@ -191,7 +247,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
 
         val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
-
         val client: SettingsClient = LocationServices.getSettingsClient(this)
         val task = client.checkLocationSettings(builder.build())
 
@@ -264,4 +319,106 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         private const val LOCATION_PERMISSION_REQUEST_CODE = 123
     }
 
+    // StartEndLocationActivity
+
+    private val pickupLocationActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            // Handle the result data here (result.data)
+            pickupAddress = result.data!!.getStringExtra("address")!!
+            pickupLatitude = result.data!!.getStringExtra("latitude")!!
+            pickupLongitude = result.data!!.getStringExtra("longitude")!!
+
+            Log.e("TAG", "pickupLatitude: ${pickupLatitude} - pickupLongitude: ${pickupLongitude} - pickupAddress: ${pickupAddress}")
+            binding.tvPickUpLocation.text = pickupAddress
+            drawPolyline()
+        }
+    }
+
+    private val dropOffLocationActivityResultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK && result.data != null) {
+            dropOffAddress = result.data!!.getStringExtra("address")!!
+            dropOffLatitude = result.data!!.getStringExtra("latitude")!!
+            dropOffLongitude = result.data!!.getStringExtra("longitude")!!
+
+            Log.e("TAG", "dropOffLatitude: $dropOffLatitude - dropOffLongitude: $dropOffLongitude - dropOffAddress: $dropOffAddress")
+            binding.tvDropOffLocation.text = dropOffAddress
+            drawPolyline()
+        }
+    }
+
+    private fun drawPolyline() {
+        if (pickupLatitude.isNotEmpty() && pickupLongitude.isNotEmpty() &&
+            dropOffLatitude.isNotEmpty() && dropOffLongitude.isNotEmpty()
+        ) {
+            val pickupLatLng = LatLng(pickupLatitude.toDouble(), pickupLongitude.toDouble())
+            val dropOffLatLng = LatLng(dropOffLatitude.toDouble(), dropOffLongitude.toDouble())
+
+            // Clear previous markers and polylines
+            mMap.clear()
+
+            // Add markers for pickup and drop-off locations
+            mMap.addMarker(MarkerOptions().position(pickupLatLng).title("Pickup Location"))
+            mMap.addMarker(MarkerOptions().position(dropOffLatLng).title("Drop-Off Location"))
+
+            // Draw polyline between pickup and drop-off locations
+            mMap.addPolyline(
+                PolylineOptions()
+                    .add(pickupLatLng, dropOffLatLng)
+                    .width(8f)
+                    .color(Color.BLUE)
+            )
+
+            // Adjust the camera view to include both locations
+            val bounds = LatLngBounds.builder()
+                .include(pickupLatLng)
+                .include(dropOffLatLng)
+                .build()
+
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100))
+        } else {
+            Log.e("Polyline", "Pickup or Drop-Off location is empty!")
+        }
+    }
+
+
+    private fun getCurrentLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            return
+        }
+        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                val pickupLatLng = LatLng(location.latitude, location.longitude)
+
+                val geocoder = Geocoder(this, Locale.getDefault())
+                val addresses: List<Address> = geocoder.getFromLocation(pickupLatLng.latitude, pickupLatLng.longitude, 1)!!
+
+                // Fetch and set current location
+                if (addresses.isNotEmpty()) {
+                    val address = addresses[0]
+                    binding.tvPickUpLocation.text = address.getAddressLine(0)
+                    pickupLatitude = pickupLatLng.latitude.toString()
+                    pickupLongitude = pickupLatLng.longitude.toString()
+                    pickupAddress = address.getAddressLine(0)
+                }
+            } else {
+                isLocationEnabled()
+            }
+        }
+    }
+}
+
+
+class MyClusterItem(
+    private val lat: Double,
+    private val lng: Double,
+    private val title: String,
+    private val snippet: String
+) : ClusterItem {
+    override fun getPosition(): LatLng = LatLng(lat, lng)
+    override fun getTitle(): String = title
+    override fun getSnippet(): String = snippet
 }

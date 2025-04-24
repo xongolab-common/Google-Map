@@ -59,6 +59,9 @@ dependencies {
     implementation(libs.play.services.location)
     implementation (libs.google.maps.services)
 
+    implementation("com.google.maps.android:android-maps-utils:2.3.0")
+
+
     // Place API
     implementation(libs.places)
 
