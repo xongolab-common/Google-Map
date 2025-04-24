@@ -1,8 +1,6 @@
 package com.example.googlemap
 
 import android.Manifest
-import android.animation.ValueAnimator
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.content.IntentSender
@@ -10,26 +8,17 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.graphics.drawable.BitmapDrawable
 import android.location.Address
 import android.location.Geocoder
 import android.net.Uri
 import android.os.Bundle
-import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.WindowManager
-import android.view.animation.LinearInterpolator
-import android.widget.Toast
-import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.lifecycle.lifecycleScope
 import com.example.googlemap.databinding.ActivityMainBinding
 import com.google.android.gms.common.api.ResolvableApiException
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -48,12 +37,11 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.LatLngBounds
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.material.snackbar.Snackbar
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.google.maps.android.clustering.ClusterItem
+import com.google.maps.android.clustering.ClusterManager
+
 import java.util.Locale
 
 
@@ -75,6 +63,8 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private var pickupAddress: String = ""
     private var dropOffAddress: String = ""
+
+    private lateinit var clusterManager: ClusterManager<MyClusterItem>
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -173,8 +163,42 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
         //enableMyLocation()
+        setupClusterManager()
         startLocationUpdates()
     }
+
+    private fun setupClusterManager() {
+        clusterManager = ClusterManager(this, mMap)
+        mMap.setOnCameraIdleListener(clusterManager)
+        mMap.setOnMarkerClickListener(clusterManager)
+
+        // Add demo cluster items
+        addClusterItems()
+    }
+
+    private fun addClusterItems() {
+        // Example data — you can use your own pickup/drop data or anything else
+        val locations = listOf(
+            LatLng(28.7041, 77.1025), // Delhi
+            LatLng(19.0760, 72.8777), // Mumbai
+            LatLng(13.0827, 80.2707), // Chennai
+            LatLng(12.9716, 77.5946), // Bangalore
+            LatLng(22.5726, 88.3639)  // Kolkata
+        )
+
+        for ((index, latLng) in locations.withIndex()) {
+            val offsetItem = MyClusterItem(
+                latLng.latitude,
+                latLng.longitude,
+                "Location $index",
+                "This is location $index"
+            )
+            clusterManager.addItem(offsetItem)
+        }
+
+        clusterManager.cluster()
+    }
+
 
     private fun requestLocationPermission() {
         if (ActivityCompat.shouldShowRequestPermissionRationale(
@@ -385,4 +409,16 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
         }
     }
+}
+
+
+class MyClusterItem(
+    private val lat: Double,
+    private val lng: Double,
+    private val title: String,
+    private val snippet: String
+) : ClusterItem {
+    override fun getPosition(): LatLng = LatLng(lat, lng)
+    override fun getTitle(): String = title
+    override fun getSnippet(): String = snippet
 }
